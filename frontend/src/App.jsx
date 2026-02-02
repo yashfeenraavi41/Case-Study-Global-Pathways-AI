@@ -108,14 +108,18 @@ const GoalSelection = ({ onNext, setGoal }) => {
   );
 };
 
-// --- 3. USER INPUTS (ADAPTED FOR ML) ---
-const UserInputs = ({ onNext, updateData, onEvaluate, loading }) => {
+// --- 3. USER INPUTS (ADAPTIVE) ---
+const UserInputs = ({ onNext, goal, updateData, onEvaluate, loading }) => {
   const [form, setForm] = useState({
+    goal: goal,
     stream: 'Science',
     marks: 85,
     budget: '20-30L',
     interest: 'Technology',
-    risk: 'Medium'
+    risk: 'Medium',
+    experience: '2',
+    skills: 'Software Engineering',
+    industry: 'Technology'
   });
 
   const Toggle = ({ label, value, group }) => (
@@ -132,43 +136,57 @@ const UserInputs = ({ onNext, updateData, onEvaluate, loading }) => {
     updateData(form);
     onEvaluate(form);
   };
+  const renderFormFields = () => {
+    if (goal === 'study_abroad' || goal === 'study_local') {
+      return (
+        <>
+          <div className="input-group">
+            <label>Academic Stream</label>
+            <div className="toggles">
+              {['Science', 'Commerce', 'Arts'].map(s => <Toggle key={s} label={s} value={s} group="stream" />)}
+            </div>
+          </div>
+          <div className="input-group">
+            <label>12th Percentage: {form.marks}%</label>
+            <input type="range" min="40" max="100" className="w-full accent-black" value={form.marks} onChange={(e) => setForm({ ...form, marks: parseInt(e.target.value) })} />
+          </div>
+          <div className="input-group">
+            <label>Budget Range</label>
+            <div className="toggles">
+              {['5-10L', '10-20L', '20-30L', '30-50L', '50L+'].map(b => <Toggle key={b} label={b} value={b} group="budget" />)}
+            </div>
+          </div>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <div className="input-group">
+            <label>Industry</label>
+            <div className="toggles">
+              {['Technology', 'Medicine', 'Business', 'Finance', 'Engineering'].map(i => <Toggle key={i} label={i} value={i} group="industry" />)}
+            </div>
+          </div>
+          <div className="input-group">
+            <label>Current Skills</label>
+            <input className="text-input" placeholder="e.g. Java, Management, Nursing" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} />
+          </div>
+          <div className="input-group">
+            <label>Years of Experience: {form.experience}yr</label>
+            <input type="range" min="0" max="20" className="w-full accent-black" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} />
+          </div>
+        </>
+      );
+    }
+  };
 
   return (
     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="centered-layout">
       <div className="form-card">
-        <h2>Plan Your Future Path</h2>
-        <p className="subtext">Tell us your academic and financial preferences for the AI to analyze.</p>
+        <h2>{goal.replace('_', ' ').toUpperCase()} Path</h2>
+        <p className="subtext">Tell us your current profile for AI analysis.</p>
 
-        <div className="input-group">
-          <label>Academic Stream</label>
-          <div className="toggles">
-            {['Science', 'Commerce', 'Arts'].map(s => <Toggle key={s} label={s} value={s} group="stream" />)}
-          </div>
-        </div>
-
-        <div className="input-group">
-          <label>12th Percentage: {form.marks}%</label>
-          <input
-            type="range" min="40" max="100"
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
-            value={form.marks}
-            onChange={(e) => setForm({ ...form, marks: parseInt(e.target.value) })}
-          />
-        </div>
-
-        <div className="input-group">
-          <label>Total Budget Range</label>
-          <div className="toggles">
-            {['5-10L', '10-20L', '20-30L', '30-50L', '50L+'].map(b => <Toggle key={b} label={b} value={b} group="budget" />)}
-          </div>
-        </div>
-
-        <div className="input-group">
-          <label>Primary Interest</label>
-          <div className="toggles">
-            {['Technology', 'Business', 'Medicine', 'Arts', 'Research'].map(i => <Toggle key={i} label={i} value={i} group="interest" />)}
-          </div>
-        </div>
+        {renderFormFields()}
 
         <div className="input-group">
           <label>Risk Appetite</label>
@@ -190,38 +208,62 @@ const ComparisonTable = ({ onNext, staticData, results }) => (
   <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="centered-layout">
     <div className="wide-card">
       <div className="card-header-row">
-        <h2>Compare Global Entrance Benchmarks</h2>
+        <h2>Perspective Comparison</h2>
         <div className="badges">
-          <span className="badge">Budget: {results?.budget || 'N/A'}</span>
-          <span className="badge">Field: {results?.stream || 'N/A'}</span>
+          <span className="badge">Pathway: {results?.goal?.replace('_', ' ')}</span>
+          <span className="badge">Risk: {results?.risk || 'Medium'}</span>
         </div>
       </div>
 
       <table className="modern-table">
         <thead>
           <tr>
-            <th>Stream/Field</th>
-            <th>India Focus</th>
-            <th>Global Focus</th>
+            <th>Metric / Factor</th>
+            <th>Domestic Focus (India)</th>
+            <th>Global Focus (Abroad)</th>
           </tr>
         </thead>
         <tbody>
-          {staticData?.exams?.map((row, i) => (
-            <tr key={i}>
-              <td>{row.field}</td>
-              <td>{row.india}</td>
-              <td>{row.abroad}</td>
-            </tr>
-          ))}
+          <tr>
+            <td>Entry Difficulty</td>
+            <td>High (Competitive Exams)</td>
+            <td>Medium (Assessment Based)</td>
+          </tr>
+          <tr>
+            <td>Academic Focus</td>
+            <td>Theory & Marks</td>
+            <td>Application & Research</td>
+          </tr>
+          <tr>
+            <td>Exp. Investment</td>
+            <td>{results?.goal?.includes('study') ? '5L - 15L' : 'Minimal'}</td>
+            <td>{results?.recommendation?.roi?.cost?.toLocaleString() || '25L+'}</td>
+          </tr>
           <tr className="highlight-row">
-            <td><strong>AI Suggestion</strong></td>
-            <td colSpan="2"><strong>{results?.decision || "Evaluating..."} ({results?.confidence}%)</strong></td>
+            <td><strong>AI Verdict</strong></td>
+            <td colSpan="2" className="text-center">
+              <div style={{
+                background: '#2563EB',
+                color: 'white',
+                padding: '12px',
+                borderRadius: '12px',
+                display: 'inline-block',
+                boxShadow: '0 4px 12px rgba(37,99,235,0.2)'
+              }}>
+                <strong style={{ fontSize: '18px' }}>
+                  {results?.decision === 'Stay in India' ? 'Domestic Tier-1 Path' : results?.decision}
+                </strong>
+              </div>
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '10px', fontWeight: '500' }}>
+                Analysis Confidence: {results?.confidence}% • Data-Driven Comparison
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
 
       <div className="right-align">
-        <button className="btn-black" onClick={onNext}>View My Best Match</button>
+        <button className="btn-black" onClick={onNext}>View My Personalized Plan <ChevronRight size={16} /></button>
       </div>
     </div>
   </motion.div>
@@ -231,52 +273,32 @@ const ComparisonTable = ({ onNext, staticData, results }) => (
 const PathwayDetails = ({ onNext, results }) => (
   <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="centered-layout">
     <div className="wide-card">
-      <h2>Your Recommended Pathway</h2>
-      <p className="subtext">Based on your Budget, Career Interests, and Academic Profile</p>
+      <h2>Pathway Verdict</h2>
 
-      {results?.recommendation ? (
-        <div className="recommendation-hero">
-          <div className="match-badge"><Check size={14} /> Best match ★</div>
-          <div className="rec-content">
-            <h3>{results.recommendation.country}</h3>
-            <p>Target Tier-1 Universities in {results.recommendation.country}</p>
-          </div>
-          <div className="rec-stats">
-            <div className="stat"><span>Est. Cost</span><strong>₹{results.recommendation.roi.cost.toLocaleString()}</strong></div>
-            <div className="stat"><span>Exp Salary</span><strong>₹{results.recommendation.roi.salary.toLocaleString()}</strong></div>
-            <div className="stat"><span>AI Confidence</span><strong>{results.confidence}%</strong></div>
-            <div className="stat"><span>ROI</span><strong className="text-green">{results.recommendation.roi.label}</strong></div>
-          </div>
+      <div className="recommendation-hero">
+        <div className="match-badge"><Check size={14} /> Best match ★</div>
+        <div className="rec-content">
+          <h3>{results?.recommendation?.country}</h3>
+          <p>{results?.university_comparison}</p>
         </div>
-      ) : (
-        <div className="recommendation-hero pink-bg" style={{ color: '#831843' }}>
-          <div className="rec-content">
-            <h3>Stay in India</h3>
-            <p>The models suggest that high-tier Indian universities offer better immediate ROI for your profile.</p>
-          </div>
-          <div className="rec-stats">
-            <div className="stat"><span>AI Confidence</span><strong>{results?.confidence}%</strong></div>
-          </div>
+        <div className="rec-stats">
+          <div className="stat"><span>Est. Budget</span><strong>{results?.recommendation?.roi?.cost}</strong></div>
+          <div className="stat"><span>Avg Salary</span><strong>{results?.recommendation?.roi?.salary}</strong></div>
+          <div className="stat"><span>AI Confidence</span><strong>{results?.confidence}%</strong></div>
+          <div className="stat"><span>ROI</span><strong className="text-green">{results?.recommendation?.roi?.label}</strong></div>
         </div>
-      )}
-
-      <div className="reasons-list">
-        <h4>Analysis & Next Steps</h4>
-        <div className="reason-pill">✔ {results?.visa_summary}</div>
-        <div className="reason-pill">✔ Recommended Exams (India): {results?.exams.india}</div>
-        <div className="reason-pill">✔ Recommended Exams (Abroad): {results?.exams.abroad}</div>
       </div>
 
-      <div className="secondary-options">
-        <h4>University Comparison</h4>
-        <div className="secondary-card pink-bg">
-          {results?.university_comparison}
-        </div>
+      <div className="reasons-list">
+        <h4>Key Insights</h4>
+        <div className="reason-pill shadow-sm">✔ Visa/Compliance: {results?.visa_summary}</div>
+        <div className="reason-pill shadow-sm">✔ Required Exams: {results?.exams?.abroad || "Certifications"}</div>
+        <div className="reason-pill shadow-sm">✔ Market Growth: {results?.insights?.growth}</div>
       </div>
 
       <div className="action-row-center">
-        <button className="btn-black" onClick={onNext}>View Detailed Plan</button>
-        <button className="btn-outline" onClick={() => window.location.reload()}>Evaluate Again</button>
+        <button className="btn-black" onClick={onNext}>Generate Final Report</button>
+        <button className="btn-outline" onClick={() => window.location.reload()}>Start Over</button>
       </div>
     </div>
   </motion.div>
@@ -286,45 +308,41 @@ const PathwayDetails = ({ onNext, results }) => (
 const DetailedReport = ({ onReset, results }) => (
   <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="centered-layout">
     <div className="wide-card">
-      <button className="back-btn" onClick={() => onReset()}><ArrowLeft size={16} /> Back to beginning</button>
+      <button className="back-btn" onClick={onReset}><ArrowLeft size={16} /> Back to dashboard</button>
 
       <div className="report-header">
         <div className="header-left">
-          <h1>{results?.recommendation?.country || "Indian Pathway"}</h1>
-          <p>Detailed AI Analysis Report</p>
+          <h1>{results?.recommendation?.country} Analysis</h1>
+          <p>{results?.decision}</p>
         </div>
-        <div className="match-badge-black">Final Verdict ★</div>
+        <div className="match-badge-black">Verified Analysis</div>
       </div>
 
       <div className="metrics-grid">
-        <div className="metric-box"><DollarSign size={20} /><h3>{results?.recommendation?.roi.score || "N/A"}x</h3><p>5-Year ROI Factor</p></div>
-        <div className="metric-box"><Briefcase size={20} /><h3>{results?.insights.growth}</h3><p>Career Growth</p></div>
-        <div className="metric-box"><ShieldCheck size={20} /><h3>{results?.confidence}%</h3><p>Model Confidence</p></div>
-        <div className="metric-box"><TrendingUp size={20} /><h3>{results?.insights.scholarship_chance}</h3><p>Scholarship Chance</p></div>
+        <div className="metric-box"><DollarSign size={20} /><h3>{results?.recommendation?.roi?.score}x</h3><p>ROI Score</p></div>
+        <div className="metric-box"><Briefcase size={20} /><h3>{results?.insights?.growth}</h3><p>Career Growth</p></div>
+        <div className="metric-box"><ShieldCheck size={20} /><h3>{results?.confidence}%</h3><p>AI Stability</p></div>
+        <div className="metric-box"><TrendingUp size={20} /><h3>{results?.insights?.salary_range}</h3><p>Salary Outlook</p></div>
       </div>
 
       <div className="breakdown-container">
         <div className="cost-breakdown">
-          <h4>Entrance Criteria</h4>
+          <h4>Profile Summary</h4>
           <div className="receipt">
-            <div className="line"><span>Benchmarks</span></div>
-            <div className="text-sm text-text-sub mt-2 leading-relaxed" style={{ fontSize: '12px', color: '#666' }}>
-              {results?.cutoff_criteria}
-            </div>
+            <div className="line"><span>Criteria</span><span>{results?.cutoff_criteria}</span></div>
+            <div className="line"><span>Visa Policy</span><span>{results?.visa_summary}</span></div>
           </div>
         </div>
-
         <div className="report-reasons">
-          <h4>Why this is recommended</h4>
-          <div className="reason-pill">✔ Career Salary: {results?.insights.salary_range}</div>
-          <div className="reason-pill">✔ {results?.recommendation?.roi.label || "Optimized for India Selection"}</div>
-          <div className="reason-pill">✔ Neutral AI Decision Verification Complete</div>
+          <h4>Why this works for you</h4>
+          <div className="reason-pill">✔ Alignment with {results?.goal?.replace('_', ' ')} goals</div>
+          <div className="reason-pill">✔ {results?.insights?.scholarship_chance !== "N/A" ? "Scholarship Available" : "Direct Placement Route"}</div>
         </div>
       </div>
 
       <div className="final-actions">
-        <button className="btn-black" onClick={() => window.print()}>Download Report</button>
-        <button className="btn-gray" onClick={onReset}><RefreshCw size={16} /> New Comparison</button>
+        <button className="btn-black" onClick={() => window.print()}>Save PDF Report</button>
+        <button className="btn-gray" onClick={onReset}><RefreshCw size={16} /> New Analysis</button>
       </div>
     </div>
   </motion.div>
@@ -340,7 +358,7 @@ function App() {
 
   const next = () => setStep(s => s + 1);
   const reset = () => {
-    setStep(1); // Jump to goal selection
+    setStep(0);
     setResults(null);
   };
 
@@ -351,14 +369,14 @@ function App() {
   const handleEvaluate = async (formData) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/evaluate`, formData);
-      setResults({ ...res.data, ...formData });
+      const res = await axios.post(`${API_BASE}/evaluate`, { ...formData, goal: data.goal });
+      setResults({ ...res.data, goal: data.goal });
       setLoading(false);
       next();
     } catch (err) {
       console.error(err);
       setLoading(false);
-      alert("Error calling the AI model. Ensure server.py is running on port 5000.");
+      alert("Evaluation failed. Make sure the backend is active.");
     }
   };
 
@@ -367,7 +385,7 @@ function App() {
       <AnimatePresence mode='wait'>
         {step === 0 && <Onboarding onNext={next} />}
         {step === 1 && <GoalSelection onNext={next} setGoal={(g) => setData({ ...data, goal: g })} />}
-        {step === 2 && <UserInputs onNext={next} updateData={(d) => setData({ ...data, ...d })} onEvaluate={handleEvaluate} loading={loading} />}
+        {step === 2 && <UserInputs onNext={next} goal={data.goal} updateData={(d) => setData({ ...data, ...d })} onEvaluate={handleEvaluate} loading={loading} />}
         {step === 3 && <ComparisonTable onNext={next} staticData={staticData} results={results} />}
         {step === 4 && <PathwayDetails onNext={next} results={results} />}
         {step === 5 && <DetailedReport onReset={reset} results={results} />}
